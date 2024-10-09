@@ -45,7 +45,7 @@ def getUpper(source:str, index:int) -> str:
 projectDir:str = forceForwards(getUpper(os.path.realpath(sys.argv[0]), 2))
 
 def make(path:str) -> str:
-    path = forceBackwards(projectDir + "\\" + path)
+    path = forceBackwards(path)
 
     if os.path.exists(path):
         return path
@@ -54,10 +54,45 @@ def make(path:str) -> str:
     return path
 
 def remove(path:str) -> bool:
-    path = forceBackwards(projectDir + "\\" + path)
+    path = forceBackwards(path)
 
     if os.path.exists(path):
         shutil.rmtree(path)
         return True
 
     return False
+
+def isDir(path:str) -> bool:
+    return os.path.isdir(forceBackwards(path))
+
+def isFile(path:str) -> bool:
+    return os.path.exists(path) and not isDir(path)
+
+def isEmpty(path:str) -> bool:
+    path = forceBackwards(path)
+
+    if isFile(path):
+        return True
+
+    return len(os.listdir(path)) == 0
+
+class relative:
+    @staticmethod
+    def make(path:str) -> str:
+        return globals()["make"](f"{projectDir}/{path}")
+
+    @staticmethod
+    def remove(path:str) -> bool:
+        return globals()["remove"](f"{projectDir}/{path}")
+
+    @staticmethod
+    def isDir(path:str) -> bool:
+        return globals()["isDir"](f"{projectDir}/{path}")
+
+    @staticmethod
+    def isFile(path:str) -> bool:
+        return globals()["isFile"](f"{projectDir}/{path}")
+
+    @staticmethod
+    def isEmpty(path:str) -> bool:
+        return globals()["isEmpty"](f"{projectDir}/{path}")

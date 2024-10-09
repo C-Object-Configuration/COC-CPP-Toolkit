@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 def command(cmd:str) -> bool:
     try:
@@ -9,3 +10,10 @@ def command(cmd:str) -> bool:
     except subprocess.CalledProcessError as e:
         print(f"Command: ({cmd}) ->\n{e.stderr.decode()}")
         return False
+
+def clear() -> None:
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+    return
