@@ -2,6 +2,7 @@
 #include <iostream>
 
 int main() {
-    std::cout << etcl::GetVersion();
+    etcl::Def def("int         num   =     69     bool   alive   =   false   ");
+    std::cin.get();
     return 0;
 }
