@@ -2,14 +2,10 @@
 #include <cctype>
 #include <iostream>
 
-etcl::Var::Var(void(*deletion)(), void *ptr)
-    : Delete(deletion), Ptr(ptr) {}
-
 etcl::Def::Def(std::string data) {
     data.insert(0, " ");
+    data.insert(data.length(), " ");
     int index = 0;
-
-    std::string key, value = "";
 
     do {
         switch (data[index]) {
@@ -17,48 +13,56 @@ etcl::Def::Def(std::string data) {
 
             case 'i': {
                 int i = index;
+                Var var;
 
-                if (!tokenize(data, i, "int", key, value, [](std::string &data, int &index, std::string &value) {
-                    while (index++ < data.length()) {
+                if (!tokenize(data, i, "int", var, [](std::string_view data, int &index, Var &var) {
+                    do {
                         if (data[index] == ' ') break;
 
                         if (std::isdigit(data[index])) {
-                            value += data[index];
+                            var.Value += data[index];
                         }
                         else return false;
-                    }
-                    return !value.empty();
+                    } while (index++ < data.length());
+                    return !var.Value.empty();
                 })) break;
 
+                var.Type = VarType::Int;
                 index = i;
+                std::cout << "\nType: " << var.Type << "| Key: " << var.Key << "| Value: " << var.Value << "|\n";
                 break;
             }
 
             case 'b': {
                 int i = index;
+                Var var;
 
-                if (!tokenize(data, i, "bool", key, value, [](std::string &data, int &index, std::string &value) {
-                    std::string desiredValue = " false ";
+                if (!tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
+                    bool b = false;
+                    switch (data[index++]) {
+                        default: return false;
+                        case 'f': break;
+                        case 't': {
+                            b = true;
+                            break;
+                        }
+                    }
 
+                    std::string desiredValue = b ? "rue " : "alse ";
                     for (char c : desiredValue) {
                         if (c != data[index++]) return false;
                     }
 
-                    value = "false";
-                    return !value.empty();
+                    var.Value = b ? "true" : "false";
+                    return true;
                 })) break;
 
+                var.Type = VarType::Bool;
                 index = i;
+                std::cout << "\nType: " << var.Type << "| Key: " << var.Key << "| Value: " << var.Value << "|\n";
                 break;
             }
         }
-        std::cout
-            << "\n Key: |" << key << '|'
-            << "\n Value: |" << value << '|'
-            << "\n\n"
-        ;
-        key = "";
-        value = "";
     } while (index++ < data.length());
 }
 
@@ -74,11 +78,11 @@ bool etcl::Def::Get(std::string key, Var &var) {
     return true;
 }
 
-bool etcl::Def::tokenize(std::string &data, int &index, std::string type, std::string &key, std::string &value, bool(*func)(std::string &data, int &index, std::string &value)) {
-    return tokenizeType(data, index, type) && tokenizeKey(data, index, key) && tokenizeValue(data, index, value, func);
+bool etcl::Def::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+    return tokenizeType(data, index, stringedType) && tokenizeKey(data, index, var.Key) && tokenizeValue(data, index, var, hasValue);
 }
 
-bool etcl::Def::tokenizeType(std::string &data, int &index, std::string type) {
+bool etcl::Def::tokenizeType(std::string_view data, int &index, std::string &type) {
     if (data[index-1] != ' ') return false;
     type += ' ';
 
@@ -89,7 +93,7 @@ bool etcl::Def::tokenizeType(std::string &data, int &index, std::string type) {
     return true;
 }
 
-bool etcl::Def::tokenizeKey(std::string &data, int &index, std::string &key) {
+bool etcl::Def::tokenizeKey(std::string_view data, int &index, std::string &key) {
     while (index++ < data.length()) {
         if (data[index] == ' ') {
             if (!key.empty()) return true;
@@ -106,7 +110,7 @@ bool etcl::Def::tokenizeKey(std::string &data, int &index, std::string &key) {
     return false;
 }
 
-bool etcl::Def::tokenizeValue(std::string &data, int &index, std::string &value, bool(*func)(std::string &data, int &index, std::string &value)) {
+bool etcl::Def::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
     bool hasEqual = false;
 
     while (index++ < data.length()) {
@@ -121,12 +125,11 @@ bool etcl::Def::tokenizeValue(std::string &data, int &index, std::string &value,
 
             default: {
                 if (!hasEqual) return false;
-                index--;
                 goto breakWhile;
             }
         }
     }
     breakWhile:
 
-    return func(data, index, value);
+    return hasValue(data, index, var);
 }
