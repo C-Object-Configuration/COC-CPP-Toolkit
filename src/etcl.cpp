@@ -94,7 +94,7 @@ bool etcl::Def::tokenizeType(std::string_view data, int &index, std::string &typ
 }
 
 bool etcl::Def::tokenizeKey(std::string_view data, int &index, std::string &key) {
-    while (index++ < data.length()) {
+    do {
         if (data[index] == ' ') {
             if (!key.empty()) return true;
             continue;
@@ -106,7 +106,7 @@ bool etcl::Def::tokenizeKey(std::string_view data, int &index, std::string &key)
         }
 
         key += data[index];
-    }
+    } while (index++ < data.length());
     return false;
 }
 
