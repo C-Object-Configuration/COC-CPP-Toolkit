@@ -19,7 +19,7 @@ etcl::Def::Def(std::string data) {
                     do {
                         if (data[index] == ' ') break;
 
-                        if (std::isdigit(data[index])) {
+                        if (std::isdigit(data[index]) || data[index] == '-') {
                             var.Value += data[index];
                         }
                         else return false;
@@ -27,9 +27,9 @@ etcl::Def::Def(std::string data) {
                     return !var.Value.empty();
                 })) break;
 
-                var.Type = VarType::Int;
                 index = i;
-                std::cout << "\nType: " << var.Type << "| Key: " << var.Key << "| Value: " << var.Value << "|\n";
+                var.Type = Int;
+                variables[var.Key] = std::move(var);
                 break;
             }
 
@@ -53,28 +53,39 @@ etcl::Def::Def(std::string data) {
                         if (c != data[index++]) return false;
                     }
 
-                    var.Value = b ? "true" : "false";
+                    var.Value = b ? "1" : "0";
                     return true;
                 })) break;
 
-                var.Type = VarType::Bool;
                 index = i;
-                std::cout << "\nType: " << var.Type << "| Key: " << var.Key << "| Value: " << var.Value << "|\n";
+                var.Type = VarType::Bool;
+                variables[var.Key] = std::move(var);
                 break;
             }
         }
     } while (index++ < data.length());
 }
 
-etcl::Def::~Def() {
-    for (auto &[key, var] : pairs) {
-        var.Delete();
+bool etcl::Def::Get(std::string_view key, int &outValue) {
+    if (!variables.contains(key.data())) return false;
+    Var &v = variables.at(key.data());
+    if (v.Type != Int) return false;
+
+    try {
+        outValue = std::stoi(v.Value);
+        return true;
+    }
+    catch (const std::out_of_range &e) {
+        return false;
     }
 }
 
-bool etcl::Def::Get(std::string key, Var &var) {
-    if (!pairs.contains(key)) return false;
-    var = pairs.at(key);
+bool etcl::Def::Get(std::string_view key, bool &outVar) {
+    if (!variables.contains(key.data())) return false;
+    Var &v = variables.at(key.data());
+
+    if (v.Type != Bool) return false;
+    outVar = (v.Value == "1") ? true : false;
     return true;
 }
 
