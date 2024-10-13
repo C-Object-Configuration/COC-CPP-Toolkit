@@ -11,41 +11,42 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
         switch (data[index]) {
             default: continue;
 
-            // case 'o': {
-            //     int i = index;
-            //     Var var;
+            case 'o': {
+                int i = index;
+                Var var;
 
-            //     if (!outObj.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
-            //         bool begin = false;
+                if (!outObj.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
+                    bool begin = false;
 
-            //         do {
-            //             switch (data[index]) {
-            //                 case '{': {
-            //                     begin = true;
-            //                     continue;
-            //                 }
+                    do {
+                        switch (data[index]) {
+                            case '{': {
+                                begin = true;
+                                continue;
+                            }
 
-            //                 case ' ': {
-            //                     if (!begin) continue;
-            //                 }
+                            case ' ': {
+                                if (!begin) continue;
+                            }
 
-            //                 default: {
-            //                     if (!begin) return false;
-            //                     var.Value += data[index];
-            //                     continue;
-            //                 }
+                            default: {
+                                if (!begin) return false;
+                                var.Value += data[index];
+                                continue;
+                            }
 
-            //                 case '}': return begin;
-            //             }
-            //         } while (index++ < data.length());
-            //         return false;
-            //     })) return false;
+                            case '}': return begin;
+                        }
+                    } while (index++ < data.length());
+                    return false;
+                })) return {};
 
-            //     index = i;
-            //     var.Type = VarType::Obj;
-            //     outObj.variables[var.Key] = std::move(var);
-            //     break;
-            // }
+                index = i;
+                std::optional<Object> childObj = etcl::Load(var.Value);
+                if (!childObj) return {};
+                outObj.objects[var.Key] = std::move(*childObj);
+                break;
+            }
 
             case 'b': {
                 int i = index;

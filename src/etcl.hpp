@@ -13,11 +13,13 @@ namespace etcl {
     class Object {
     friend std::optional<Object> Load(std::string data);
     public:
+        std::optional<Object> GetObject(std::string_view key);
         std::optional<bool> GetBool(std::string_view key);
         std::optional<char> GetChar(std::string_view key);
         std::optional<long long int> GetInt(std::string_view key);
 
     private:
+        std::unordered_map<std::string, Object> objects;
         std::unordered_map<std::string, bool> booleans;
         std::unordered_map<std::string, char> characters;
         std::unordered_map<std::string, long long int> integers;
