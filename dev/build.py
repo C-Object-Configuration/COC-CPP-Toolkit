@@ -18,7 +18,8 @@ def build() -> str:
     proj:str = path.projectDir
 
     cmd(f"g++ -c src/etcl.cpp -o {tempDir}/etcl.o -std=c++23")
-    cmd(f"ar rvs {outDir}/etcl.lib {tempDir}/etcl.o")
+    cmd(f"g++ -c src/etcl_getters.cpp -o {tempDir}/etcl_getters.o -std=c++23")
+    cmd(f"ar rvs {outDir}/etcl.lib {tempDir}/etcl.o {tempDir}/etcl_getters.o")
 
     path.remove(tempDir)
     return outDir
