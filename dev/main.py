@@ -30,6 +30,7 @@ def main() -> None:
 
         case "3" | "Clean" | "clean":
             path.relative.remove("out")
+            path.relative.remove("dev/temp")
             console.clear()
 
         case _:

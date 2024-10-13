@@ -16,9 +16,9 @@ namespace etcl {
         std::string Value = "";
     };
 
-    class Def {
+    class Obj {
+    friend bool Load(std::string data, Obj &outObj);
     public:
-        Def(std::string data);
         bool Get(std::string_view key, int &outValue);
         bool Get(std::string_view key, bool &outValue);
 
@@ -29,4 +29,6 @@ namespace etcl {
         bool tokenizeKey(std::string_view data, int &index, std::string &key);
         bool tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var));
     };
+
+    bool Load(std::string data, Obj &outObj);
 }

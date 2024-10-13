@@ -2,15 +2,17 @@
 #include <iostream>
 
 int main() {
-    etcl::Def def("int  num   =    -2147483648            bool   alive=                           false   ");
+    std::string rawData = "int  num   =    -2147483648            bool   alive=                           false   ";
+    etcl::Obj data;
+    if (!etcl::Load(rawData, data)) return 0;
 
     int num = 0;
-    if (def.Get("num", num)) {
+    if (data.Get("num", num)) {
         std::cout << "\nnum: " << num;
     }
 
     bool alive = false;
-    if(def.Get("alive", alive)) {
+    if(data.Get("alive", alive)) {
         std::cout << "\nalive: " << (alive ? "True" : "False");
     }
 

@@ -2,71 +2,71 @@
 #include <cctype>
 #include <iostream>
 
-etcl::Def::Def(std::string data) {
-    data.insert(0, " ");
-    data.insert(data.length(), " ");
-    int index = 0;
+// etcl::Obj::Obj(std::string data) {
+//     data.insert(0, " ");
+//     data.insert(data.length(), " ");
+//     int index = 0;
 
-    do {
-        switch (data[index]) {
-            default: continue;
+//     do {
+//         switch (data[index]) {
+//             default: continue;
 
-            case 'i': {
-                int i = index;
-                Var var;
+//             case 'i': {
+//                 int i = index;
+//                 Var var;
 
-                if (!tokenize(data, i, "int", var, [](std::string_view data, int &index, Var &var) {
-                    do {
-                        if (data[index] == ' ') break;
+//                 if (!tokenize(data, i, "int", var, [](std::string_view data, int &index, Var &var) {
+//                     do {
+//                         if (data[index] == ' ') break;
 
-                        if (std::isdigit(data[index]) || data[index] == '-') {
-                            var.Value += data[index];
-                        }
-                        else return false;
-                    } while (index++ < data.length());
-                    return !var.Value.empty();
-                })) break;
+//                         if (std::isdigit(data[index]) || data[index] == '-') {
+//                             var.Value += data[index];
+//                         }
+//                         else return false;
+//                     } while (index++ < data.length());
+//                     return !var.Value.empty();
+//                 })) break;
 
-                index = i;
-                var.Type = Int;
-                variables[var.Key] = std::move(var);
-                break;
-            }
+//                 index = i;
+//                 var.Type = Int;
+//                 variables[var.Key] = std::move(var);
+//                 break;
+//             }
 
-            case 'b': {
-                int i = index;
-                Var var;
+//             case 'b': {
+//                 int i = index;
+//                 Var var;
 
-                if (!tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
-                    bool b = false;
-                    switch (data[index++]) {
-                        default: return false;
-                        case 'f': break;
-                        case 't': {
-                            b = true;
-                            break;
-                        }
-                    }
+//                 if (!tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
+//                     bool b = false;
+//                     switch (data[index++]) {
+//                         default: return false;
+//                         case 'f': break;
+//                         case 't': {
+//                             b = true;
+//                             break;
+//                         }
+//                     }
 
-                    std::string desiredValue = b ? "rue " : "alse ";
-                    for (char c : desiredValue) {
-                        if (c != data[index++]) return false;
-                    }
+//                     std::string desiredValue = b ? "rue " : "alse ";
+//                     for (char c : desiredValue) {
+//                         if (c != data[index++]) return false;
+//                     }
 
-                    var.Value = b ? "1" : "0";
-                    return true;
-                })) break;
+//                     var.Value = b ? "1" : "0";
+//                     return true;
+//                 })) break;
 
-                index = i;
-                var.Type = VarType::Bool;
-                variables[var.Key] = std::move(var);
-                break;
-            }
-        }
-    } while (index++ < data.length());
-}
+//                 index = i;
+//                 var.Type = VarType::Bool;
+//                 variables[var.Key] = std::move(var);
+//                 break;
+//             }
+//         }
+//     } while (index++ < data.length());
+// }
 
-bool etcl::Def::Get(std::string_view key, int &outValue) {
+bool etcl::Obj::Get(std::string_view key, int &outValue) {
     if (!variables.contains(key.data())) return false;
     Var &v = variables.at(key.data());
     if (v.Type != Int) return false;
@@ -80,7 +80,7 @@ bool etcl::Def::Get(std::string_view key, int &outValue) {
     }
 }
 
-bool etcl::Def::Get(std::string_view key, bool &outVar) {
+bool etcl::Obj::Get(std::string_view key, bool &outVar) {
     if (!variables.contains(key.data())) return false;
     Var &v = variables.at(key.data());
 
@@ -89,11 +89,11 @@ bool etcl::Def::Get(std::string_view key, bool &outVar) {
     return true;
 }
 
-bool etcl::Def::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+bool etcl::Obj::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
     return tokenizeType(data, index, stringedType) && tokenizeKey(data, index, var.Key) && tokenizeValue(data, index, var, hasValue);
 }
 
-bool etcl::Def::tokenizeType(std::string_view data, int &index, std::string &type) {
+bool etcl::Obj::tokenizeType(std::string_view data, int &index, std::string &type) {
     if (data[index-1] != ' ') return false;
     type += ' ';
 
@@ -104,7 +104,7 @@ bool etcl::Def::tokenizeType(std::string_view data, int &index, std::string &typ
     return true;
 }
 
-bool etcl::Def::tokenizeKey(std::string_view data, int &index, std::string &key) {
+bool etcl::Obj::tokenizeKey(std::string_view data, int &index, std::string &key) {
     do {
         if (data[index] == ' ') {
             if (!key.empty()) return true;
@@ -121,7 +121,7 @@ bool etcl::Def::tokenizeKey(std::string_view data, int &index, std::string &key)
     return false;
 }
 
-bool etcl::Def::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+bool etcl::Obj::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
     bool hasEqual = false;
 
     while (index++ < data.length()) {
@@ -143,4 +143,69 @@ bool etcl::Def::tokenizeValue(std::string_view data, int &index, Var &var, bool(
     breakWhile:
 
     return hasValue(data, index, var);
+}
+
+bool etcl::Load(std::string data, Obj &outObj) {
+    data.insert(0, " ");
+    data.insert(data.length(), " ");
+    int index = 0;
+
+    do {
+        switch (data[index]) {
+            default: continue;
+
+            case 'i': {
+                int i = index;
+                Var var;
+
+                if (!outObj.tokenize(data, i, "int", var, [](std::string_view data, int &index, Var &var) {
+                    do {
+                        if (data[index] == ' ') break;
+
+                        if (std::isdigit(data[index]) || data[index] == '-') {
+                            var.Value += data[index];
+                        }
+                        else return false;
+                    } while (index++ < data.length());
+                    return !var.Value.empty();
+                })) return false;
+
+                index = i;
+                var.Type = Int;
+                outObj.variables[var.Key] = std::move(var);
+                break;
+            }
+
+            case 'b': {
+                int i = index;
+                Var var;
+
+                if (!outObj.tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
+                    bool b = false;
+                    switch (data[index++]) {
+                        default: return false;
+                        case 'f': break;
+                        case 't': {
+                            b = true;
+                            break;
+                        }
+                    }
+
+                    std::string desiredValue = b ? "rue " : "alse ";
+                    for (char c : desiredValue) {
+                        if (c != data[index++]) return false;
+                    }
+
+                    var.Value = b ? "1" : "0";
+                    return true;
+                })) return false;
+
+                index = i;
+                var.Type = VarType::Bool;
+                outObj.variables[var.Key] = std::move(var);
+                break;
+            }
+        }
+    } while (index++ < data.length());
+    return true;
 }
