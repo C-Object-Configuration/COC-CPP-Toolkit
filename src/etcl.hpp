@@ -11,7 +11,7 @@ namespace etcl {
     };
 
     class Object {
-    friend bool Load(std::string data, Object &outObj);
+    friend std::optional<Object> Load(std::string data);
     public:
         std::optional<bool> GetBool(std::string_view key);
         std::optional<char> GetChar(std::string_view key);
@@ -28,5 +28,5 @@ namespace etcl {
         bool tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var));
     };
 
-    bool Load(std::string data, Object &outObj);
+    std::optional<Object> Load(std::string data);
 }

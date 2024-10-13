@@ -1,10 +1,11 @@
 #include "etcl.hpp"
 #include <stdexcept>
 
-bool etcl::Load(std::string data, Object &outObj) {
+std::optional<etcl::Object> etcl::Load(std::string data) {
     data.insert(0, " ");
     data.insert(data.length(), " ");
     int index = 0;
+    Object outObj;
 
     do {
         switch (data[index]) {
@@ -68,7 +69,7 @@ bool etcl::Load(std::string data, Object &outObj) {
 
                     var.Value = b ? "1" : "0";
                     return true;
-                })) return false;
+                })) return {};
 
                 index = i;
                 outObj.booleans[var.Key] = (var.Value == "1") ? true : false;
@@ -95,7 +96,7 @@ bool etcl::Load(std::string data, Object &outObj) {
                     if (data[index+1] != '\'') return false;
                     var.Value += data[index];
                     return true;
-                })) return false;
+                })) return {};
 
                 index = i;
                 outObj.characters[var.Key] = var.Value[0];
@@ -116,17 +117,19 @@ bool etcl::Load(std::string data, Object &outObj) {
                         else return false;
                     } while (index++ < data.length());
                     return !var.Value.empty();
-                })) return false;
+                })) return {};
 
                 index = i;
                 try {
                     int i = std::stoi(var.Value);
                     outObj.integers[var.Key] = i;
                 }
-                catch (const std::out_of_range &e) {}
+                catch (const std::out_of_range &e) {
+                    return {};
+                }
                 break;
             }
         }
     } while (index++ < data.length());
-    return true;
+    return std::move(outObj);
 }
