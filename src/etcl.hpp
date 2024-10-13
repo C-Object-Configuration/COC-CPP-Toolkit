@@ -7,8 +7,9 @@ namespace etcl {
     enum VarType {
         Null,
         Obj,
-        Int,
-        Bool
+        Bool,
+        Char,
+        Int
     };
 
     struct Var {
@@ -21,8 +22,9 @@ namespace etcl {
     friend bool Load(std::string data, Object &outObj);
     public:
         bool Get(std::string_view key, Object &outObj);
-        bool Get(std::string_view key, bool &outValue);
-        bool Get(std::string_view key, long long int &outValue);
+        bool Get(std::string_view key, bool &outBool);
+        bool Get(std::string_view key, char &outChar);
+        bool Get(std::string_view key, long long int &outInt);
 
     private:
         std::unordered_map<std::string, Var> variables;
