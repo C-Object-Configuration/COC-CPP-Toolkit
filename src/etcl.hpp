@@ -2,18 +2,10 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <optional>
 
 namespace etcl {
-    enum VarType {
-        Null,
-        Obj,
-        Bool,
-        Char,
-        Int
-    };
-
     struct Var {
-        VarType Type = Null;
         std::string Key = "";
         std::string Value = "";
     };
@@ -21,13 +13,15 @@ namespace etcl {
     class Object {
     friend bool Load(std::string data, Object &outObj);
     public:
-        bool Get(std::string_view key, Object &outObj);
-        bool Get(std::string_view key, bool &outBool);
-        bool Get(std::string_view key, char &outChar);
-        bool Get(std::string_view key, long long int &outInt);
+        std::optional<bool> GetBool(std::string_view key);
+        std::optional<char> GetChar(std::string_view key);
+        std::optional<long long int> GetInt(std::string_view key);
 
     private:
-        std::unordered_map<std::string, Var> variables;
+        std::unordered_map<std::string, bool> booleans;
+        std::unordered_map<std::string, char> characters;
+        std::unordered_map<std::string, long long int> integers;
+
         bool tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var));
         bool tokenizeType(std::string_view data, int &index, std::string &type);
         bool tokenizeKey(std::string_view data, int &index, std::string &key);

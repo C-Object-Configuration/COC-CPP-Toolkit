@@ -1,4 +1,5 @@
 #include "etcl.hpp"
+#include <stdexcept>
 
 bool etcl::Load(std::string data, Object &outObj) {
     data.insert(0, " ");
@@ -9,41 +10,41 @@ bool etcl::Load(std::string data, Object &outObj) {
         switch (data[index]) {
             default: continue;
 
-            case 'o': {
-                int i = index;
-                Var var;
+            // case 'o': {
+            //     int i = index;
+            //     Var var;
 
-                if (!outObj.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
-                    bool begin = false;
+            //     if (!outObj.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
+            //         bool begin = false;
 
-                    do {
-                        switch (data[index]) {
-                            case '{': {
-                                begin = true;
-                                continue;
-                            }
+            //         do {
+            //             switch (data[index]) {
+            //                 case '{': {
+            //                     begin = true;
+            //                     continue;
+            //                 }
 
-                            case ' ': {
-                                if (!begin) continue;
-                            }
+            //                 case ' ': {
+            //                     if (!begin) continue;
+            //                 }
 
-                            default: {
-                                if (!begin) return false;
-                                var.Value += data[index];
-                                continue;
-                            }
+            //                 default: {
+            //                     if (!begin) return false;
+            //                     var.Value += data[index];
+            //                     continue;
+            //                 }
 
-                            case '}': return begin;
-                        }
-                    } while (index++ < data.length());
-                    return false;
-                })) return false;
+            //                 case '}': return begin;
+            //             }
+            //         } while (index++ < data.length());
+            //         return false;
+            //     })) return false;
 
-                index = i;
-                var.Type = VarType::Obj;
-                outObj.variables[var.Key] = std::move(var);
-                break;
-            }
+            //     index = i;
+            //     var.Type = VarType::Obj;
+            //     outObj.variables[var.Key] = std::move(var);
+            //     break;
+            // }
 
             case 'b': {
                 int i = index;
@@ -70,8 +71,7 @@ bool etcl::Load(std::string data, Object &outObj) {
                 })) return false;
 
                 index = i;
-                var.Type = VarType::Bool;
-                outObj.variables[var.Key] = std::move(var);
+                outObj.booleans[var.Key] = (var.Value == "1") ? true : false;
                 break;
             }
 
@@ -98,8 +98,7 @@ bool etcl::Load(std::string data, Object &outObj) {
                 })) return false;
 
                 index = i;
-                var.Type = VarType::Char;
-                outObj.variables[var.Key] = std::move(var);
+                outObj.characters[var.Key] = var.Value[0];
                 break;
             }
 
@@ -120,8 +119,11 @@ bool etcl::Load(std::string data, Object &outObj) {
                 })) return false;
 
                 index = i;
-                var.Type = VarType::Int;
-                outObj.variables[var.Key] = std::move(var);
+                try {
+                    int i = std::stoi(var.Value);
+                    outObj.integers[var.Key] = i;
+                }
+                catch (const std::out_of_range &e) {}
                 break;
             }
         }

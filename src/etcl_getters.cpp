@@ -1,43 +1,24 @@
 #include "etcl.hpp"
-#include <stdexcept>
-#include <iostream>
 
-bool etcl::Object::Get(std::string_view key, etcl::Object &outObj) {
-    if (!variables.contains(key.data())) return false;
-    Var &v = variables.at(key.data());
-    if (v.Type != VarType::Obj) return false;
-
-    return etcl::Load(v.Value, outObj);
+std::optional<bool> etcl::Object::GetBool(std::string_view key) {
+    if (!booleans.contains(key.data())) return {};
+    return booleans.at(key.data());
 }
 
-bool etcl::Object::Get(std::string_view key, bool &outBool) {
-    if (!variables.contains(key.data())) return false;
-    Var &v = variables.at(key.data());
-
-    if (v.Type != VarType::Bool) return false;
-    outBool = (v.Value == "1") ? true : false;
-    return true;
+std::optional<char> etcl::Object::GetChar(std::string_view key) {
+    if (!characters.contains(key.data())) return {};
+    return characters.at(key.data());
 }
 
-bool etcl::Object::Get(std::string_view key, char &outChar) {
-    if (!variables.contains(key.data())) return false;
-    Var &v = variables.at(key.data());
-
-    if (v.Type != VarType::Char) return false;
-    outChar = v.Value[0];
-    return true;
+std::optional<long long int> etcl::Object::GetInt(std::string_view key) {
+    if (!integers.contains(key.data())) return {};
+    return integers.at(key.data());
 }
 
-bool etcl::Object::Get(std::string_view key, long long int &outInt) {
-    if (!variables.contains(key.data())) return false;
-    Var &v = variables.at(key.data());
-    if (v.Type != VarType::Int) return false;
+// bool etcl::Object::Get(std::string_view key, etcl::Object &outObj) {
+//     if (!variables.contains(key.data())) return false;
+//     Var &v = variables.at(key.data());
+//     if (v.Type != VarType::Obj) return false;
 
-    try {
-        outInt = std::stoi(v.Value);
-        return true;
-    }
-    catch (const std::out_of_range &e) {
-        return false;
-    }
-}
+//     return etcl::Load(v.Value, outObj);
+// }
