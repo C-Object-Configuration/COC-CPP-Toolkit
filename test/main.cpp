@@ -6,14 +6,14 @@ int main() {
     etcl::Object data;
     if (!etcl::Load(rawData, data)) return 0;
 
-    int num = 0;
+    long long int num = 0;
     if (data.Get("num", num)) {
         std::cout << "\nnum: " << num;
     }
 
     etcl::Object myObject;
     if (data.Get("myObject", myObject)) {
-        int age = 0;
+        long long int age = 0;
         if (myObject.Get("age", age)) {
             std::cout << "\nmyObject.age: " << age;
         }

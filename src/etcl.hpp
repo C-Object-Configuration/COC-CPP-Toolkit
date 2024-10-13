@@ -21,8 +21,8 @@ namespace etcl {
     friend bool Load(std::string data, Object &outObj);
     public:
         bool Get(std::string_view key, Object &outObj);
-        bool Get(std::string_view key, int &outValue);
         bool Get(std::string_view key, bool &outValue);
+        bool Get(std::string_view key, long long int &outValue);
 
     private:
         std::unordered_map<std::string, Var> variables;
