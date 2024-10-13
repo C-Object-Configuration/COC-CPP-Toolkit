@@ -6,6 +6,7 @@
 namespace etcl {
     enum VarType {
         Null,
+        Obj,
         Int,
         Bool
     };
@@ -16,9 +17,10 @@ namespace etcl {
         std::string Value = "";
     };
 
-    class Obj {
-    friend bool Load(std::string data, Obj &outObj);
+    class Object {
+    friend bool Load(std::string data, Object &outObj);
     public:
+        bool Get(std::string_view key, Object &outObj);
         bool Get(std::string_view key, int &outValue);
         bool Get(std::string_view key, bool &outValue);
 
@@ -30,5 +32,5 @@ namespace etcl {
         bool tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var));
     };
 
-    bool Load(std::string data, Obj &outObj);
+    bool Load(std::string data, Object &outObj);
 }

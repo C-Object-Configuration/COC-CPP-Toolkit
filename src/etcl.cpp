@@ -2,7 +2,15 @@
 #include <cctype>
 #include <iostream>
 
-bool etcl::Obj::Get(std::string_view key, int &outValue) {
+bool etcl::Object::Get(std::string_view key, etcl::Object &outObj) {
+    if (!variables.contains(key.data())) return false;
+    Var &v = variables.at(key.data());
+    if (v.Type != Obj) return false;
+
+    return etcl::Load(v.Value, outObj);
+}
+
+bool etcl::Object::Get(std::string_view key, int &outValue) {
     if (!variables.contains(key.data())) return false;
     Var &v = variables.at(key.data());
     if (v.Type != Int) return false;
@@ -16,7 +24,7 @@ bool etcl::Obj::Get(std::string_view key, int &outValue) {
     }
 }
 
-bool etcl::Obj::Get(std::string_view key, bool &outVar) {
+bool etcl::Object::Get(std::string_view key, bool &outVar) {
     if (!variables.contains(key.data())) return false;
     Var &v = variables.at(key.data());
 
@@ -25,12 +33,19 @@ bool etcl::Obj::Get(std::string_view key, bool &outVar) {
     return true;
 }
 
-bool etcl::Obj::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+bool etcl::Object::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
     return tokenizeType(data, index, stringedType) && tokenizeKey(data, index, var.Key) && tokenizeValue(data, index, var, hasValue);
 }
 
-bool etcl::Obj::tokenizeType(std::string_view data, int &index, std::string &type) {
-    if (data[index-1] != ' ') return false;
+bool etcl::Object::tokenizeType(std::string_view data, int &index, std::string &type) {
+    switch (data[index-1]) {
+        default: return false;
+
+        case ' ':
+        case '{':
+        case '}': break;
+    }
+
     type += ' ';
 
     for (char c : type) {
@@ -40,7 +55,7 @@ bool etcl::Obj::tokenizeType(std::string_view data, int &index, std::string &typ
     return true;
 }
 
-bool etcl::Obj::tokenizeKey(std::string_view data, int &index, std::string &key) {
+bool etcl::Object::tokenizeKey(std::string_view data, int &index, std::string &key) {
     do {
         if (data[index] == ' ') {
             if (!key.empty()) return true;
@@ -57,7 +72,7 @@ bool etcl::Obj::tokenizeKey(std::string_view data, int &index, std::string &key)
     return false;
 }
 
-bool etcl::Obj::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+bool etcl::Object::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
     bool hasEqual = false;
 
     while (index++ < data.length()) {
@@ -81,7 +96,7 @@ bool etcl::Obj::tokenizeValue(std::string_view data, int &index, Var &var, bool(
     return hasValue(data, index, var);
 }
 
-bool etcl::Load(std::string data, Obj &outObj) {
+bool etcl::Load(std::string data, Object &outObj) {
     data.insert(0, " ");
     data.insert(data.length(), " ");
     int index = 0;
@@ -138,6 +153,42 @@ bool etcl::Load(std::string data, Obj &outObj) {
 
                 index = i;
                 var.Type = VarType::Bool;
+                outObj.variables[var.Key] = std::move(var);
+                break;
+            }
+
+            case 'o': {
+                int i = index;
+                Var var;
+
+                if (!outObj.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
+                    bool begin = false;
+
+                    do {
+                        switch (data[index]) {
+                            case '{': {
+                                begin = true;
+                                continue;
+                            }
+
+                            case ' ': {
+                                if (!begin) continue;
+                            }
+
+                            default: {
+                                if (!begin) return false;
+                                var.Value += data[index];
+                                break;
+                            }
+
+                            case '}': return begin;
+                        }
+                    } while (index++ < data.length());
+                    return false;
+                })) return false;
+
+                index = i;
+                var.Type = VarType::Obj;
                 outObj.variables[var.Key] = std::move(var);
                 break;
             }
