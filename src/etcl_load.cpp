@@ -65,10 +65,11 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                         }
                     }
 
-                    std::string desiredValue = b ? "rue " : "alse ";
+                    std::string desiredValue = b ? "rue" : "alse";
                     for (char c : desiredValue) {
                         if (c != data[index++]) return false;
                     }
+                    if (data[index] != ' ') return false;
 
                     var.Value = b ? "1" : "0";
                     return true;

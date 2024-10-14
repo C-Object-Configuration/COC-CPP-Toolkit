@@ -10,7 +10,7 @@ void Print(std::string_view varName, T t, bool spacing = false) {
 }
 
 int main() {
-    std::string rawData = "obj myObject = {bool myBool = true  char myChar='E'}";
+    std::string rawData = "obj myObject = {bool myBool = true char myChar='E'}";
     rawData += std::format(" int minInt = {}", std::to_string(-std::numeric_limits<int>::max()));
     rawData += std::format(" int maxInt = {}", std::to_string(std::numeric_limits<int>::max()));
     rawData += std::format(" long minLong = {}", std::to_string(-std::numeric_limits<long long int>::max()));
