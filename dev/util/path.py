@@ -62,6 +62,13 @@ def remove(path:str) -> bool:
 
     return False
 
+def copy(src:str, dst:str) -> None:
+    src = forceForwards(src)
+    dst = forceForwards(dst)
+
+    dst = dst[len(projectDir)+1:]
+    shutil.copy(src, dst)
+
 def isDir(path:str) -> bool:
     return os.path.isdir(forceBackwards(path))
 
@@ -84,6 +91,10 @@ class relative:
     @staticmethod
     def remove(path:str) -> bool:
         return globals()["remove"](f"{projectDir}/{path}")
+
+    @staticmethod
+    def copy(src:str, dst:str) -> None:
+        globals()["copy"](f"{projectDir}/{src}", f"{projectDir}/{dst}")
 
     @staticmethod
     def isDir(path:str) -> bool:

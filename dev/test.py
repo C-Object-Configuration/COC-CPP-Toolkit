@@ -11,6 +11,7 @@ def test() -> None:
     stdLib:str = "-fPIC -static -static-libgcc -static-libstdc++"
     console.command(f"g++ -c test/main.cpp -o {tempDir}/main.o -std=c++23")
     console.command(f"g++ {tempDir}/main.o {libDir}/etcl.lib -o {tempDir}/test.exe {stdLib}")
+    path.relative.copy("test/root.etcl", f"{tempDir}/root.etcl")
 
     print("\nEnter to run test")
     input()
