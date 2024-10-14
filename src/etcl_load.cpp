@@ -211,6 +211,41 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 index = i;
                 break;
             }
+
+            case 's': {
+                int i = index;
+                Var var;
+
+                if (!object.tokenize(data, i, "string", var, [](std::string_view data, int&index, Var &var) {
+                    bool opening = false;
+
+                    do {
+                        switch (data[index]) {
+                            case '"': {
+                                if (!opening) {
+                                    opening = true;
+                                    continue;
+                                }
+
+                                if (data[index-1] != '\\') {
+                                    return !var.Value.empty();
+                                }
+                            }
+
+                            default: {
+                                if (!opening) return false;
+                                var.Value += data[index];
+                            }
+                        }
+                    } while (index++ < data.length());
+
+                    return false;
+                })) return {};
+
+                object.strings[var.Key] = var.Value;
+                index = i;
+                break;
+            }
         }
     } while (index++ < data.length());
     return std::move(object);

@@ -20,6 +20,7 @@ namespace etcl {
         std::optional<long long int> GetLong(std::string_view key);
         std::optional<float> GetFloat(std::string_view key);
         std::optional<double> GetDouble(std::string_view key);
+        std::optional<std::string> GetString(std::string_view key);
 
     private:
         std::unordered_map<std::string, Object> objects;
@@ -29,6 +30,7 @@ namespace etcl {
         std::unordered_map<std::string, long long int> longs;
         std::unordered_map<std::string, float> floats;
         std::unordered_map<std::string, double> doubles;
+        std::unordered_map<std::string, std::string> strings;
 
         bool tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var));
         bool tokenizeType(std::string_view data, int &index, std::string &type);

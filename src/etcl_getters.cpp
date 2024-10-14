@@ -34,3 +34,8 @@ std::optional<double> etcl::Object::GetDouble(std::string_view key) {
     if (!doubles.contains(key.data())) return {};
     return doubles.at(key.data());
 }
+
+std::optional<std::string> etcl::Object::GetString(std::string_view key) {
+    if (!strings.contains(key.data())) return {};
+    return strings.at(key.data());
+}

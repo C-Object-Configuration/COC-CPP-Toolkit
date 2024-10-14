@@ -9,7 +9,10 @@ bool etcl::Object::tokenizeType(std::string_view data, int &index, std::string &
         default: return false;
         case ' ':
         case '{':
-        case '}': break;
+        case '}':
+        case '"':
+        case '\'':
+            break;
     }
 
     type += ' ';
