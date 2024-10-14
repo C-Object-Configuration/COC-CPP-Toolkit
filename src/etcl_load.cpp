@@ -1,5 +1,6 @@
 #include "etcl.hpp"
 #include <stdexcept>
+#include <limits>
 
 std::optional<etcl::Object> etcl::Load(std::string data) {
     data.insert(0, " ");
@@ -8,6 +9,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
     Object object;
 
     do {
+        bool firstCase = false;
         switch (data[index]) {
             default: continue;
 
@@ -105,10 +107,14 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
             }
 
             case 'i': {
+                firstCase = true;
+                [[fallthrough]];
+            }
+            case 'l': {
                 int i = index;
                 Var var;
 
-                if (!object.tokenize(data, i, "int", var, [](std::string_view data, int &index, Var &var) {
+                if (!object.tokenize(data, i, (firstCase ? "int" : "long"), var, [](std::string_view data, int &index, Var &var) {
                     if (data[index] == '-') {
                         var.Value += '-';
                         index++;
@@ -126,12 +132,19 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                     return !var.Value.empty();
                 })) return {};
 
-                try {
-                    long long int i = std::stoll(var.Value);
-                    object.integers[var.Key] = i;
+                if (firstCase) {
+                    try {
+                        int i = std::stoi(var.Value);
+                        object.integers[var.Key] = i;
+                    }
+                    catch (const std::out_of_range &e) { return {}; }
                 }
-                catch (const std::out_of_range &e) {
-                    return {};
+                else {
+                    try {
+                        long long int l = std::stoll(var.Value);
+                        object.longs[var.Key] = l;
+                    }
+                    catch (const std::out_of_range &e) { return {}; }
                 }
 
                 index = i;
@@ -139,10 +152,14 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
             }
 
             case 'f': {
+                firstCase = true;
+                [[fallthrough]];
+            }
+            case 'd': {
                 int i = index;
                 Var var;
 
-                if (!object.tokenize(data, i, "float", var, [](std::string_view data, int &index, Var &var) {
+                if (!object.tokenize(data, i, (firstCase ? "float" : "double"), var, [](std::string_view data, int &index, Var &var) {
                     if (data[index] == '-') {
                         var.Value += '-';
                         index++;
@@ -169,12 +186,25 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                     return !var.Value.empty();
                 })) return {};
 
-                try {
-                    long double d = std::stold(var.Value);
-                    object.doubles[var.Key] = d;
+                if (firstCase) {
+                    float f;
+                    try { f = std::stof(var.Value); }
+                    catch (const std::out_of_range &e) { return {}; }
+
+                    if (f == std::numeric_limits<float>::infinity()
+                    ||  f == -std::numeric_limits<float>::infinity()
+                    ) return {};
+                    object.floats[var.Key] = f;
                 }
-                catch (const std::out_of_range &e) {
-                    return {};
+                else {
+                    double d;
+                    try { d = std::stod(var.Value); }
+                    catch (const std::out_of_range &e) { return {}; }
+
+                    if (d == std::numeric_limits<double>::infinity()
+                    ||  d == std::numeric_limits<double>::infinity()
+                    ) return {};
+                    object.doubles[var.Key] = d;
                 }
 
                 index = i;

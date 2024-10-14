@@ -15,12 +15,22 @@ std::optional<char> etcl::Object::GetChar(std::string_view key) {
     return characters.at(key.data());
 }
 
-std::optional<long long int> etcl::Object::GetInt(std::string_view key) {
+std::optional<int> etcl::Object::GetInt(std::string_view key) {
     if (!integers.contains(key.data())) return {};
     return integers.at(key.data());
 }
 
-std::optional<long double> etcl::Object::GetFloat(std::string_view key) {
+std::optional<long long int> etcl::Object::GetLong(std::string_view key) {
+    if (!longs.contains(key.data())) return {};
+    return longs.at(key.data());
+}
+
+std::optional<float> etcl::Object::GetFloat(std::string_view key) {
+    if (!floats.contains(key.data())) return {};
+    return floats.at(key.data());
+}
+
+std::optional<double> etcl::Object::GetDouble(std::string_view key) {
     if (!doubles.contains(key.data())) return {};
     return doubles.at(key.data());
 }
