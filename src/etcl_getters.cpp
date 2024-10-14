@@ -19,3 +19,8 @@ std::optional<long long int> etcl::Object::GetInt(std::string_view key) {
     if (!integers.contains(key.data())) return {};
     return integers.at(key.data());
 }
+
+std::optional<long double> etcl::Object::GetFloat(std::string_view key) {
+    if (!doubles.contains(key.data())) return {};
+    return doubles.at(key.data());
+}

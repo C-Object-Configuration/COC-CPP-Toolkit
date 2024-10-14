@@ -5,7 +5,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
     data.insert(0, " ");
     data.insert(data.length(), " ");
     int index = 0;
-    Object outObj;
+    Object object;
 
     do {
         switch (data[index]) {
@@ -15,7 +15,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 int i = index;
                 Var var;
 
-                if (!outObj.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
+                if (!object.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
                     bool begin = false;
 
                     do {
@@ -44,7 +44,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 index = i;
                 std::optional<Object> childObj = etcl::Load(var.Value);
                 if (!childObj) return {};
-                outObj.objects[var.Key] = std::move(*childObj);
+                object.objects[var.Key] = std::move(*childObj);
                 break;
             }
 
@@ -52,7 +52,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 int i = index;
                 Var var;
 
-                if (!outObj.tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
+                if (!object.tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
                     bool b = false;
                     switch (data[index++]) {
                         default: return false;
@@ -73,7 +73,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 })) return {};
 
                 index = i;
-                outObj.booleans[var.Key] = (var.Value == "1") ? true : false;
+                object.booleans[var.Key] = (var.Value == "1") ? true : false;
                 break;
             }
 
@@ -81,7 +81,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 int i = index;
                 Var var;
 
-                if (!outObj.tokenize(data, i, "char", var, [](std::string_view data, int &index, Var &var) {
+                if (!object.tokenize(data, i, "char", var, [](std::string_view data, int &index, Var &var) {
                     bool begin = false;
 
                     do {
@@ -100,7 +100,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 })) return {};
 
                 index = i;
-                outObj.characters[var.Key] = var.Value[0];
+                object.characters[var.Key] = var.Value[0];
                 break;
             }
 
@@ -108,29 +108,79 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 int i = index;
                 Var var;
 
-                if (!outObj.tokenize(data, i, "int", var, [](std::string_view data, int &index, Var &var) {
+                if (!object.tokenize(data, i, "int", var, [](std::string_view data, int &index, Var &var) {
+                    if (data[index] == '-') {
+                        var.Value += '-';
+                        index++;
+                    }
+
                     do {
                         if (data[index] == ' ') break;
 
-                        if (std::isdigit(data[index]) || data[index] == '-') {
+                        if (std::isdigit(data[index])) {
                             var.Value += data[index];
                         }
                         else return false;
                     } while (index++ < data.length());
+
                     return !var.Value.empty();
                 })) return {};
 
-                index = i;
                 try {
-                    int i = std::stoi(var.Value);
-                    outObj.integers[var.Key] = i;
+                    long long int i = std::stoll(var.Value);
+                    object.integers[var.Key] = i;
                 }
                 catch (const std::out_of_range &e) {
                     return {};
                 }
+
+                index = i;
+                break;
+            }
+
+            case 'f': {
+                int i = index;
+                Var var;
+
+                if (!object.tokenize(data, i, "float", var, [](std::string_view data, int &index, Var &var) {
+                    if (data[index] == '-') {
+                        var.Value += '-';
+                        index++;
+                    }
+
+                    bool hasDot = false;
+                    do {
+                        if (data[index] == ' ') break;
+
+                        if (std::isdigit(data[index])) {
+                            var.Value += data[index];
+                            continue;
+                        }
+
+                        if (data[index] == '.' && !hasDot) {
+                            hasDot = true;
+                            var.Value += '.';
+                            continue;
+                        }
+
+                        return false;
+                    } while (index++ < data.length());
+
+                    return !var.Value.empty();
+                })) return {};
+
+                try {
+                    long double d = std::stold(var.Value);
+                    object.doubles[var.Key] = d;
+                }
+                catch (const std::out_of_range &e) {
+                    return {};
+                }
+
+                index = i;
                 break;
             }
         }
     } while (index++ < data.length());
-    return std::move(outObj);
+    return std::move(object);
 }
