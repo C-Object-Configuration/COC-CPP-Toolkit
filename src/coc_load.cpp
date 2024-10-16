@@ -15,9 +15,9 @@ std::optional<coc::Struct> coc::Load(std::string data) {
 
             case 's': {
                 int i = index;
-                Var var;
+                std::string key, value = "";
 
-                if (structure.tokenize(data, i, "string", var, [](std::string_view data, int&index, Var &var) {
+                if (structure.tokenize(data, i, "string", key, value, [](std::string_view data, int&index, std::string &key, std::string &value) {
                     bool opening = false;
 
                     do {
@@ -29,28 +29,29 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                                 }
 
                                 if (data[index-1] != '\\') {
-                                    return !var.Value.empty();
+                                    return !value.empty();
                                 }
                             }
 
                             default: {
                                 if (!opening) return false;
-                                var.Value += data[index];
+                                value += data[index];
                             }
                         }
                     } while (index++ < data.length());
 
                     return false;
                 })) {
-                    structure.strings[var.Key] = var.Value;
+                    structure.Strings.map[key] = value;
                     index = i;
                     break;
                 }
 
                 i = index;
-                var = {};
+                key = "";
+                value = "";
 
-                if (structure.tokenize(data, i, "struct", var, [](std::string_view data, int &index, Var &var) {
+                if (structure.tokenize(data, i, "struct", key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
                     bool begin = false;
 
                     do {
@@ -66,7 +67,7 @@ std::optional<coc::Struct> coc::Load(std::string data) {
 
                             default: {
                                 if (!begin) return false;
-                                var.Value += data[index];
+                                value += data[index];
                                 continue;
                             }
 
@@ -76,18 +77,18 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                     return false;
                 })) {
                     index = i;
-                    std::optional<Struct> childStruct = coc::Load(var.Value);
+                    std::optional<Struct> childStruct = coc::Load(value);
                     if (!childStruct) return {};
-                    structure.structs[var.Key] = std::move(*childStruct);
+                    structure.Structs.map[key] = std::move(*childStruct);
                     break;
                 };
             }
 
             case 'b': {
                 int i = index;
-                Var var;
+                std::string key, value = "";
 
-                if (!structure.tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, "bool", key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
                     bool b = false;
                     switch (data[index++]) {
                         default: return false;
@@ -104,20 +105,20 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                     }
                     if (data[index] != ' ') return false;
 
-                    var.Value = b ? "1" : "0";
+                    value = b ? "1" : "0";
                     return true;
                 })) return {};
 
                 index = i;
-                structure.booleans[var.Key] = (var.Value == "1") ? true : false;
+                structure.Bools.map[key] = (value == "1") ? true : false;
                 break;
             }
 
             case 'c': {
                 int i = index;
-                Var var;
+                std::string key, value = "";
 
-                if (!structure.tokenize(data, i, "char", var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, "char", key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
                     bool begin = false;
 
                     do {
@@ -131,12 +132,12 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                     index++;
 
                     if (data[index+1] != '\'') return false;
-                    var.Value += data[index];
+                    value += data[index];
                     return true;
                 })) return {};
 
                 index = i;
-                structure.characters[var.Key] = var.Value[0];
+                structure.Chars.map[key] = value[0];
                 break;
             }
 
@@ -146,11 +147,11 @@ std::optional<coc::Struct> coc::Load(std::string data) {
             }
             case 'l': {
                 int i = index;
-                Var var;
+                std::string key, value = "";
 
-                if (!structure.tokenize(data, i, (firstCase ? "int" : "long"), var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, (firstCase ? "int" : "long"), key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
                     if (data[index] == '-') {
-                        var.Value += '-';
+                        value += '-';
                         index++;
                     }
 
@@ -158,25 +159,25 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                         if (data[index] == ' ') break;
 
                         if (std::isdigit(data[index])) {
-                            var.Value += data[index];
+                            value += data[index];
                         }
                         else return false;
                     } while (index++ < data.length());
 
-                    return !var.Value.empty();
+                    return !value.empty();
                 })) return {};
 
                 if (firstCase) {
                     try {
-                        int i = std::stoi(var.Value);
-                        structure.integers[var.Key] = i;
+                        int i = std::stoi(value);
+                        structure.Ints.map[key] = i;
                     }
                     catch (const std::out_of_range &e) { return {}; }
                 }
                 else {
                     try {
-                        long long int l = std::stoll(var.Value);
-                        structure.longs[var.Key] = l;
+                        long long int l = std::stoll(value);
+                        structure.Longs.map[key] = l;
                     }
                     catch (const std::out_of_range &e) { return {}; }
                 }
@@ -191,11 +192,11 @@ std::optional<coc::Struct> coc::Load(std::string data) {
             }
             case 'd': {
                 int i = index;
-                Var var;
+                std::string key, value = "";
 
-                if (!structure.tokenize(data, i, (firstCase ? "float" : "double"), var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, (firstCase ? "float" : "double"), key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
                     if (data[index] == '-') {
-                        var.Value += '-';
+                        value += '-';
                         index++;
                     }
 
@@ -204,41 +205,41 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                         if (data[index] == ' ') break;
 
                         if (std::isdigit(data[index])) {
-                            var.Value += data[index];
+                            value += data[index];
                             continue;
                         }
 
                         if (data[index] == '.' && !hasDot) {
                             hasDot = true;
-                            var.Value += '.';
+                            value += '.';
                             continue;
                         }
 
                         return false;
                     } while (index++ < data.length());
 
-                    return !var.Value.empty();
+                    return !value.empty();
                 })) return {};
 
                 if (firstCase) {
                     float f;
-                    try { f = std::stof(var.Value); }
+                    try { f = std::stof(value); }
                     catch (const std::out_of_range &e) { return {}; }
 
                     if (f == std::numeric_limits<float>::infinity()
                     ||  f == -std::numeric_limits<float>::infinity()
                     ) return {};
-                    structure.floats[var.Key] = f;
+                    structure.Floats.map[key] = f;
                 }
                 else {
                     double d;
-                    try { d = std::stod(var.Value); }
+                    try { d = std::stod(value); }
                     catch (const std::out_of_range &e) { return {}; }
 
                     if (d == std::numeric_limits<double>::infinity()
                     ||  d == std::numeric_limits<double>::infinity()
                     ) return {};
-                    structure.doubles[var.Key] = d;
+                    structure.Doubles.map[key] = d;
                 }
 
                 index = i;

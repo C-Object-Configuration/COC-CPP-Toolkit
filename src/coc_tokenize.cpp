@@ -1,7 +1,7 @@
 #include "coc.hpp"
 
-bool coc::Struct::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
-    return tokenizeType(data, index, stringedType) && tokenizeKey(data, index, var.Key) && tokenizeValue(data, index, var, hasValue);
+bool coc::Struct::tokenize(std::string_view data, int &index, std::string stringedType, std::string &key, std::string &value, bool(*hasValue)(std::string_view data, int &index, std::string &key, std::string &value)) {
+    return tokenizeType(data, index, stringedType) && tokenizeKey(data, index, key) && tokenizeValue(data, index, key, value, hasValue);
 }
 
 bool coc::Struct::tokenizeType(std::string_view data, int &index, std::string &type) {
@@ -41,7 +41,7 @@ bool coc::Struct::tokenizeKey(std::string_view data, int &index, std::string &ke
     return false;
 }
 
-bool coc::Struct::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+bool coc::Struct::tokenizeValue(std::string_view data, int &index, std::string &key, std::string &value, bool(*hasValue)(std::string_view data, int &index, std::string &key, std::string &value)) {
     bool hasEqual = false;
 
     while (index++ < data.length()) {
@@ -62,5 +62,5 @@ bool coc::Struct::tokenizeValue(std::string_view data, int &index, Var &var, boo
     }
     breakWhile:
 
-    return hasValue(data, index, var);
+    return hasValue(data, index, key, value);
 }

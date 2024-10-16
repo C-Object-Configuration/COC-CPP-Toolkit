@@ -36,36 +36,36 @@ int main() {
         return 0;
     }
 
-    std::optional<coc::Struct> myObject = data->GetStruct("myObject");
+    auto myObject = data->Structs["myObject"];
     if (myObject) {
-        std::optional<char> myChar = myObject->GetChar("myChar");
-        std::optional<bool> myBool = myObject->GetBool("myBool");
+        auto myChar = myObject->Chars["myChar"];
+        auto myBool = myObject->Bools["myBool"];
 
         if (myChar) Print("myChar", *myChar);
         if (myBool) Print("myBool", *myBool, true);
     }
 
-    std::optional<int> minInt = data->GetInt("minInt");
-    std::optional<int> maxInt = data->GetInt("maxInt");
+    auto minInt = data->Ints["minInt"];
+    auto maxInt = data->Ints["maxInt"];
     if (minInt) Print("minInt", *minInt);
     if (maxInt) Print("maxInt", *maxInt, true);
 
-    std::optional<long long int> minLong = data->GetLong("minLong");
-    std::optional<long long int> maxLong = data->GetLong("maxLong");
+    auto minLong = data->Longs["minLong"];
+    auto maxLong = data->Longs["maxLong"];
     if (minLong) Print("minLong", *minLong);
     if (maxLong) Print("maxLong", *maxLong, true);
 
-    std::optional<float> minFloat = data->GetFloat("minFloat");
-    std::optional<float> maxFloat = data->GetFloat("maxFloat");
+    auto minFloat = data->Floats["minFloat"];
+    auto maxFloat = data->Floats["maxFloat"];
     if (minFloat) Print("minFloat", *minFloat);
     if (maxFloat) Print("maxFloat", *maxFloat, true);
 
-    std::optional<double> minDouble = data->GetDouble("minDouble");
-    std::optional<double> maxDouble = data->GetDouble("maxDouble");
+    auto minDouble = data->Doubles["minDouble"];
+    auto maxDouble = data->Doubles["maxDouble"];
     if (minDouble) Print("minDouble", *minDouble, true);
     if (maxDouble) Print("maxDouble", *maxDouble, true);
 
-    std::optional<std::string> myString = data->GetString("myString");
+    auto myString = data->Strings["myString"];
     if (myString) Print("myString", *myString);
 
     std::cin.get();
