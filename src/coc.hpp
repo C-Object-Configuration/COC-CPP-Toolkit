@@ -10,10 +10,10 @@ namespace coc {
         std::string Value = "";
     };
 
-    class Object {
-    friend std::optional<Object> Load(std::string data);
+    class Struct {
+    friend std::optional<Struct> Load(std::string data);
     public:
-        std::optional<Object> GetObject(std::string_view key);
+        std::optional<Struct> GetStruct(std::string_view key);
         std::optional<bool> GetBool(std::string_view key);
         std::optional<char> GetChar(std::string_view key);
         std::optional<int> GetInt(std::string_view key);
@@ -23,7 +23,7 @@ namespace coc {
         std::optional<std::string> GetString(std::string_view key);
 
     private:
-        std::unordered_map<std::string, Object> objects;
+        std::unordered_map<std::string, Struct> structs;
         std::unordered_map<std::string, bool> booleans;
         std::unordered_map<std::string, char> characters;
         std::unordered_map<std::string, int> integers;
@@ -38,5 +38,5 @@ namespace coc {
         bool tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var));
     };
 
-    std::optional<Object> Load(std::string data);
+    std::optional<Struct> Load(std::string data);
 }

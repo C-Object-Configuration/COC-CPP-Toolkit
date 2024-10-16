@@ -1,10 +1,10 @@
 #include "coc.hpp"
 
-bool coc::Object::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+bool coc::Struct::tokenize(std::string_view data, int &index, std::string stringedType, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
     return tokenizeType(data, index, stringedType) && tokenizeKey(data, index, var.Key) && tokenizeValue(data, index, var, hasValue);
 }
 
-bool coc::Object::tokenizeType(std::string_view data, int &index, std::string &type) {
+bool coc::Struct::tokenizeType(std::string_view data, int &index, std::string &type) {
     switch (data[index-1]) {
         default: return false;
         case ' ':
@@ -24,7 +24,7 @@ bool coc::Object::tokenizeType(std::string_view data, int &index, std::string &t
     return true;
 }
 
-bool coc::Object::tokenizeKey(std::string_view data, int &index, std::string &key) {
+bool coc::Struct::tokenizeKey(std::string_view data, int &index, std::string &key) {
     do {
         if (data[index] == ' ') {
             if (!key.empty()) return true;
@@ -41,7 +41,7 @@ bool coc::Object::tokenizeKey(std::string_view data, int &index, std::string &ke
     return false;
 }
 
-bool coc::Object::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
+bool coc::Struct::tokenizeValue(std::string_view data, int &index, Var &var, bool(*hasValue)(std::string_view data, int &index, Var &var)) {
     bool hasEqual = false;
 
     while (index++ < data.length()) {

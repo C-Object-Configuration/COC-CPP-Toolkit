@@ -2,22 +2,55 @@
 #include <stdexcept>
 #include <limits>
 
-std::optional<coc::Object> coc::Load(std::string data) {
+std::optional<coc::Struct> coc::Load(std::string data) {
     data.insert(0, " ");
     data.insert(data.length(), " ");
     int index = 0;
-    Object object;
+    Struct structure;
 
     do {
         bool firstCase = false;
         switch (data[index]) {
             default: continue;
 
-            case 'o': {
+            case 's': {
                 int i = index;
                 Var var;
 
-                if (!object.tokenize(data, i, "obj", var, [](std::string_view data, int &index, Var &var) {
+                if (structure.tokenize(data, i, "string", var, [](std::string_view data, int&index, Var &var) {
+                    bool opening = false;
+
+                    do {
+                        switch (data[index]) {
+                            case '"': {
+                                if (!opening) {
+                                    opening = true;
+                                    continue;
+                                }
+
+                                if (data[index-1] != '\\') {
+                                    return !var.Value.empty();
+                                }
+                            }
+
+                            default: {
+                                if (!opening) return false;
+                                var.Value += data[index];
+                            }
+                        }
+                    } while (index++ < data.length());
+
+                    return false;
+                })) {
+                    structure.strings[var.Key] = var.Value;
+                    index = i;
+                    break;
+                }
+
+                i = index;
+                var = {};
+
+                if (structure.tokenize(data, i, "struct", var, [](std::string_view data, int &index, Var &var) {
                     bool begin = false;
 
                     do {
@@ -41,20 +74,20 @@ std::optional<coc::Object> coc::Load(std::string data) {
                         }
                     } while (index++ < data.length());
                     return false;
-                })) return {};
-
-                index = i;
-                std::optional<Object> childObj = coc::Load(var.Value);
-                if (!childObj) return {};
-                object.objects[var.Key] = std::move(*childObj);
-                break;
+                })) {
+                    index = i;
+                    std::optional<Struct> childStruct = coc::Load(var.Value);
+                    if (!childStruct) return {};
+                    structure.structs[var.Key] = std::move(*childStruct);
+                    break;
+                };
             }
 
             case 'b': {
                 int i = index;
                 Var var;
 
-                if (!object.tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, "bool", var, [](std::string_view data, int &index, Var &var) {
                     bool b = false;
                     switch (data[index++]) {
                         default: return false;
@@ -76,7 +109,7 @@ std::optional<coc::Object> coc::Load(std::string data) {
                 })) return {};
 
                 index = i;
-                object.booleans[var.Key] = (var.Value == "1") ? true : false;
+                structure.booleans[var.Key] = (var.Value == "1") ? true : false;
                 break;
             }
 
@@ -84,7 +117,7 @@ std::optional<coc::Object> coc::Load(std::string data) {
                 int i = index;
                 Var var;
 
-                if (!object.tokenize(data, i, "char", var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, "char", var, [](std::string_view data, int &index, Var &var) {
                     bool begin = false;
 
                     do {
@@ -103,7 +136,7 @@ std::optional<coc::Object> coc::Load(std::string data) {
                 })) return {};
 
                 index = i;
-                object.characters[var.Key] = var.Value[0];
+                structure.characters[var.Key] = var.Value[0];
                 break;
             }
 
@@ -115,7 +148,7 @@ std::optional<coc::Object> coc::Load(std::string data) {
                 int i = index;
                 Var var;
 
-                if (!object.tokenize(data, i, (firstCase ? "int" : "long"), var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, (firstCase ? "int" : "long"), var, [](std::string_view data, int &index, Var &var) {
                     if (data[index] == '-') {
                         var.Value += '-';
                         index++;
@@ -136,14 +169,14 @@ std::optional<coc::Object> coc::Load(std::string data) {
                 if (firstCase) {
                     try {
                         int i = std::stoi(var.Value);
-                        object.integers[var.Key] = i;
+                        structure.integers[var.Key] = i;
                     }
                     catch (const std::out_of_range &e) { return {}; }
                 }
                 else {
                     try {
                         long long int l = std::stoll(var.Value);
-                        object.longs[var.Key] = l;
+                        structure.longs[var.Key] = l;
                     }
                     catch (const std::out_of_range &e) { return {}; }
                 }
@@ -160,7 +193,7 @@ std::optional<coc::Object> coc::Load(std::string data) {
                 int i = index;
                 Var var;
 
-                if (!object.tokenize(data, i, (firstCase ? "float" : "double"), var, [](std::string_view data, int &index, Var &var) {
+                if (!structure.tokenize(data, i, (firstCase ? "float" : "double"), var, [](std::string_view data, int &index, Var &var) {
                     if (data[index] == '-') {
                         var.Value += '-';
                         index++;
@@ -195,7 +228,7 @@ std::optional<coc::Object> coc::Load(std::string data) {
                     if (f == std::numeric_limits<float>::infinity()
                     ||  f == -std::numeric_limits<float>::infinity()
                     ) return {};
-                    object.floats[var.Key] = f;
+                    structure.floats[var.Key] = f;
                 }
                 else {
                     double d;
@@ -205,48 +238,13 @@ std::optional<coc::Object> coc::Load(std::string data) {
                     if (d == std::numeric_limits<double>::infinity()
                     ||  d == std::numeric_limits<double>::infinity()
                     ) return {};
-                    object.doubles[var.Key] = d;
+                    structure.doubles[var.Key] = d;
                 }
 
                 index = i;
                 break;
             }
-
-            case 's': {
-                int i = index;
-                Var var;
-
-                if (!object.tokenize(data, i, "string", var, [](std::string_view data, int&index, Var &var) {
-                    bool opening = false;
-
-                    do {
-                        switch (data[index]) {
-                            case '"': {
-                                if (!opening) {
-                                    opening = true;
-                                    continue;
-                                }
-
-                                if (data[index-1] != '\\') {
-                                    return !var.Value.empty();
-                                }
-                            }
-
-                            default: {
-                                if (!opening) return false;
-                                var.Value += data[index];
-                            }
-                        }
-                    } while (index++ < data.length());
-
-                    return false;
-                })) return {};
-
-                object.strings[var.Key] = var.Value;
-                index = i;
-                break;
-            }
         }
     } while (index++ < data.length());
-    return std::move(object);
+    return std::move(structure);
 }

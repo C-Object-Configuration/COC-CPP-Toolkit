@@ -29,14 +29,14 @@ int main() {
         rawData += tempC;
     }
 
-    std::optional<coc::Object> data = coc::Load(rawData);
+    std::optional<coc::Struct> data = coc::Load(rawData);
     if (!data) {
         std::cout << "Invalid Data!";
         std::cin.get();
         return 0;
     }
 
-    std::optional<coc::Object> myObject = data->GetObject("myObject");
+    std::optional<coc::Struct> myObject = data->GetStruct("myObject");
     if (myObject) {
         std::optional<char> myChar = myObject->GetChar("myChar");
         std::optional<bool> myBool = myObject->GetBool("myBool");

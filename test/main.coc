@@ -1,4 +1,4 @@
-obj myObject = {
+struct myObject = {
     char myChar = 'E'
     bool myBool = true
 }
