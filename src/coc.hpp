@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <optional>
 
-namespace etcl {
+namespace coc {
     struct Var {
         std::string Key = "";
         std::string Value = "";

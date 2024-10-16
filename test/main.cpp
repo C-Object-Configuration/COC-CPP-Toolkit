@@ -1,7 +1,8 @@
-#include "../src/etcl.hpp"
+#include "../src/coc.hpp"
 #include <iostream>
 #include <format>
 #include <limits>
+#include <fstream>
 
 template<typename T>
 void Print(std::string_view varName, T t, bool spacing = false) {
@@ -10,25 +11,32 @@ void Print(std::string_view varName, T t, bool spacing = false) {
 }
 
 int main() {
-    std::string rawData = "obj myObject = {char myChar='E'bool myBool = true}";
-    rawData += std::format(" int minInt = {}", std::to_string(-std::numeric_limits<int>::max()));
-    rawData += std::format(" int maxInt = {}", std::to_string(std::numeric_limits<int>::max()));
-    rawData += std::format(" long minLong = {}", std::to_string(-std::numeric_limits<long long int>::max()));
-    rawData += std::format(" long maxLong = {}", std::to_string(std::numeric_limits<long long int>::max()));
-    rawData += std::format(" float minFloat = {}", std::to_string(-std::numeric_limits<float>::max()));
-    rawData += std::format(" float maxFloat = {}", std::to_string(std::numeric_limits<float>::max()));
-    rawData += std::format(" double minDouble = {}", std::to_string(-std::numeric_limits<double>::max()));
-    rawData += std::format(" double maxDouble = {}", std::to_string(std::numeric_limits<double>::max()));
-    rawData += std::format(" string myString = {}", "\"abc123\"");
+    std::string fileName = "dev/temp/main.coc";
 
-    std::optional<etcl::Object> data = etcl::Load(rawData);
+    std::ifstream file;
+    file.open(fileName);
+
+    if (file.fail()) {
+        std::cout << "Could not open file: " << fileName;
+        std::cin.get();
+        return 0;
+    }
+
+    std::string rawData;
+    char tempC;
+    while (file.get(tempC)) {
+        if (tempC == '\n') tempC = ' ';
+        rawData += tempC;
+    }
+
+    std::optional<coc::Object> data = coc::Load(rawData);
     if (!data) {
         std::cout << "Invalid Data!";
         std::cin.get();
         return 0;
     }
 
-    std::optional<etcl::Object> myObject = data->GetObject("myObject");
+    std::optional<coc::Object> myObject = data->GetObject("myObject");
     if (myObject) {
         std::optional<char> myChar = myObject->GetChar("myChar");
         std::optional<bool> myBool = myObject->GetBool("myBool");

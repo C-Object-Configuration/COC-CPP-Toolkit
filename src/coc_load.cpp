@@ -1,8 +1,8 @@
-#include "etcl.hpp"
+#include "coc.hpp"
 #include <stdexcept>
 #include <limits>
 
-std::optional<etcl::Object> etcl::Load(std::string data) {
+std::optional<coc::Object> coc::Load(std::string data) {
     data.insert(0, " ");
     data.insert(data.length(), " ");
     int index = 0;
@@ -44,7 +44,7 @@ std::optional<etcl::Object> etcl::Load(std::string data) {
                 })) return {};
 
                 index = i;
-                std::optional<Object> childObj = etcl::Load(var.Value);
+                std::optional<Object> childObj = coc::Load(var.Value);
                 if (!childObj) return {};
                 object.objects[var.Key] = std::move(*childObj);
                 break;
