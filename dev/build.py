@@ -19,8 +19,11 @@ def build() -> str:
 
     cmd(f"g++ -c src/coc_getters.cpp -o {tempDir}/coc_getters.o -std=c++23")
     cmd(f"g++ -c src/coc_load.cpp -o {tempDir}/coc_load.o -std=c++23")
+    cmd(f"g++ -c src/coc_open.cpp -o {tempDir}/coc_open.o -std=c++23")
     cmd(f"g++ -c src/coc_tokenize.cpp -o {tempDir}/coc_tokenize.o -std=c++23")
-    cmd(f"ar rvs {outDir}/coc.lib {tempDir}/coc_getters.o {tempDir}/coc_load.o {tempDir}/coc_tokenize.o")
+
+    cmd(f"ar rvs {outDir}/coc.lib {tempDir}/coc_getters.o {tempDir}/coc_load.o {tempDir}/coc_open.o {tempDir}/coc_tokenize.o")
+    cmd(f"g++ -shared {tempDir}/coc_getters.o {tempDir}/coc_load.o {tempDir}/coc_open.o {tempDir}/coc_tokenize.o -o {outDir}/coc.dll")
 
     path.remove(tempDir)
     return outDir

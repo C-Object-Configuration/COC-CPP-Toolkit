@@ -1,10 +1,10 @@
 #include "coc.hpp"
 
-#define GETTERS(returnType, member) \
-std::optional<returnType> coc::Struct::member::Get(std::string_view key) { \
-    if (!map.contains(key.data())) return {}; \
-    return map.at(key.data()); \
-} \
+#define GETTERS(returnType, member)                                                                     \
+std::optional<returnType> coc::Struct::member::Get(std::string_view key) {                              \
+    if (!map.contains(key.data())) return {};                                                           \
+    return map.at(key.data());                                                                          \
+}                                                                                                       \
 std::optional<returnType> coc::Struct::member::operator[](std::string_view key) { return Get(key); }
 
 GETTERS(coc::Struct, Structs)

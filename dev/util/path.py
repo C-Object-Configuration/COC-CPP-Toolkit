@@ -69,6 +69,9 @@ def copy(src:str, dst:str) -> None:
     dst = dst[len(projectDir)+1:]
     shutil.copy(src, dst)
 
+def change(path:str) -> None:
+    os.chdir(forceBackwards(path))
+
 def isDir(path:str) -> bool:
     return os.path.isdir(forceBackwards(path))
 

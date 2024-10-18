@@ -6,6 +6,7 @@
 
 namespace coc {
     class Struct;
+    std::optional<Struct> Open(std::string path);
     std::optional<Struct> Load(std::string data);
 
     #define TYPE(type, member)                                  \
@@ -15,7 +16,7 @@ namespace coc {
         std::optional<type> Get(std::string_view key);          \
         std::optional<type> operator[](std::string_view key);   \
     private:                                                    \
-        std::unordered_map<std::string, type> map;            \
+        std::unordered_map<std::string, type> map;              \
     } member;
 
     class Struct {

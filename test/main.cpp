@@ -1,37 +1,10 @@
 #include "../src/coc.hpp"
 #include <iostream>
-#include <format>
-#include <limits>
-#include <fstream>
-
-template<typename T>
-void Print(std::string_view varName, T t, bool spacing = false) {
-    std::cout << std::fixed << varName << ": " << t << '\n';
-    if (spacing) std::cout << '\n';
-}
 
 int main() {
-    std::string fileName = "dev/temp/main.coc";
-
-    std::ifstream file;
-    file.open(fileName);
-
-    if (file.fail()) {
-        std::cout << "Could not open file: " << fileName;
-        std::cin.get();
-        return 0;
-    }
-
-    std::string rawData;
-    char tempC;
-    while (file.get(tempC)) {
-        if (tempC == '\n') tempC = ' ';
-        rawData += tempC;
-    }
-
-    std::optional<coc::Struct> data = coc::Load(rawData);
+    auto data = coc::Open("main.coc");
     if (!data) {
-        std::cout << "Invalid Data!";
+        std::cout << "Invalid Data!\n" << "Enter to continue";
         std::cin.get();
         return 0;
     }
@@ -40,34 +13,34 @@ int main() {
     if (myObject) {
         auto myChar = myObject->Chars["myChar"];
         auto myBool = myObject->Bools["myBool"];
+        auto myString = data->Strings["myString"];
 
-        if (myChar) Print("myChar", *myChar);
-        if (myBool) Print("myBool", *myBool, true);
+        if (myChar) std::cout << "\nmyChar: " << *myChar;
+        if (myBool) std::cout << "\nmyBool: " << *myBool;
+        if (myString) std::cout << "\nmyString: " << *myString;
     }
 
     auto minInt = data->Ints["minInt"];
     auto maxInt = data->Ints["maxInt"];
-    if (minInt) Print("minInt", *minInt);
-    if (maxInt) Print("maxInt", *maxInt, true);
+    if (minInt) std::cout << "\nminInt: " << *minInt;
+    if (maxInt) std::cout << "\nmaxInt: " << *maxInt;
 
     auto minLong = data->Longs["minLong"];
     auto maxLong = data->Longs["maxLong"];
-    if (minLong) Print("minLong", *minLong);
-    if (maxLong) Print("maxLong", *maxLong, true);
+    if (minLong) std::cout << "\nminLong: " << *minLong;
+    if (maxLong) std::cout << "\nmaxLong: " << *maxLong;
 
     auto minFloat = data->Floats["minFloat"];
     auto maxFloat = data->Floats["maxFloat"];
-    if (minFloat) Print("minFloat", *minFloat);
-    if (maxFloat) Print("maxFloat", *maxFloat, true);
+    if (minFloat) std::cout << "\nminFloat: " << *minFloat;
+    if (maxFloat) std::cout << "\nmaxFloat: " << *maxFloat;
 
     auto minDouble = data->Doubles["minDouble"];
     auto maxDouble = data->Doubles["maxDouble"];
-    if (minDouble) Print("minDouble", *minDouble, true);
-    if (maxDouble) Print("maxDouble", *maxDouble, true);
+    if (minDouble) std::cout << "\nminDouble: " << *minDouble;
+    if (maxDouble) std::cout << "\nmaxDouble: " << *maxDouble;
 
-    auto myString = data->Strings["myString"];
-    if (myString) Print("myString", *myString);
-
+    std::cout << "\n\nEnter to continue";
     std::cin.get();
     return 0;
 }
