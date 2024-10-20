@@ -92,6 +92,7 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                             }
                         }
                     } while (index++ < data.length());
+                    index--;
 
                     return false;
                 });

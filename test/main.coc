@@ -1,5 +1,13 @@
-string MyString = "abc"
-string Array = ["ligma", "lol"]
+struct People = [
+    {
+        string Name = "Chuck"
+        string Foods = ["lemon", "beef"]
+    },
+    {
+        string Name = "Joshua"
+        string Foods = ["apples", "ribs"]
+    }
+]
 
 struct Chars = {
     char MyChar = 'E'

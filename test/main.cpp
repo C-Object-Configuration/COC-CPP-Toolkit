@@ -1,17 +1,19 @@
 #include "../src/coc.hpp"
 #include <iostream>
+#include <vector>
 
-void Globals(coc::Struct &object) {
-    std::cout << "\n\n-Globals-";
+void People(std::vector<coc::Struct> &people) {
+    std::cout << "\n\n-People-";
 
-    auto myString = object.Strings["MyString"];
-    auto array = object.StringArrays["Array"];
+    for (coc::Struct &person : people) {
+        auto name = person.Strings["Name"];
+        auto foods = person.StringArrays["Foods"];
 
-    if (myString) std::cout << "\nMyString: " << *myString;
-    if (array) {
-        int count = 0;
-        for (std::string &s : *array) {
-            std::cout << "\nArray[" << count++ << "]: " << s;
+        if (name) std::cout << '\n' << *name << " Foods:";
+        if (foods) {
+            for (std::string &s : *foods) {
+                std::cout << "\n  " << s;
+            }
         }
     }
 }
@@ -74,7 +76,8 @@ int main() {
         return 0;
     }
 
-    Globals(*data);
+    auto people = data->StructArrays["People"];
+    if (people) People(*people);
 
     auto chars = data->Structs["Chars"];
     if (chars) Chars(*chars);
