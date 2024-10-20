@@ -15,9 +15,10 @@ std::optional<coc::Struct> coc::Load(std::string data) {
 
             case 's': {
                 int i = index;
-                std::string key, value = "";
+                std::string key;
+                std::vector<std::string> values;
 
-                if (structure.tokenize(data, i, "string", key, value, [](std::string_view data, int&index, std::string &key, std::string &value) {
+                coc::Struct::tokenizeValueCallback callback = structure.tokenize(data, i, "string", key, values, [](std::string_view data, int&index, bool isArray, std::string &key, std::string &value) {
                     bool opening = false;
 
                     do {
@@ -41,17 +42,27 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                     } while (index++ < data.length());
 
                     return false;
-                })) {
-                    structure.Strings.map[key] = value;
-                    index = i;
-                    break;
+                });
+
+                switch (callback) {
+                    case coc::Struct::tokenizeValueCallback::Fail: break;
+
+                    case coc::Struct::tokenizeValueCallback::Single: {
+                        structure.Strings.map[key] = values[0];
+                        goto breakS;
+                    }
+
+                    case coc::Struct::tokenizeValueCallback::Array: {
+                        structure.StringArrays.map[key] = std::move(values);
+                        goto breakS;
+                    }
                 }
 
                 i = index;
                 key = "";
-                value = "";
+                values = {};
 
-                if (structure.tokenize(data, i, "struct", key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
+                callback = structure.tokenize(data, i, "struct", key, values, [](std::string_view data, int &index, bool isArray, std::string &key, std::string &value) {
                     bool begin = false;
 
                     do {
@@ -63,6 +74,7 @@ std::optional<coc::Struct> coc::Load(std::string data) {
 
                             case ' ': {
                                 if (!begin) continue;
+                                [[fallthrough]];
                             }
 
                             default: {
@@ -74,21 +86,41 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                             case '}': return begin;
                         }
                     } while (index++ < data.length());
+
                     return false;
-                })) {
-                    index = i;
-                    std::optional<Struct> childStruct = coc::Load(value);
-                    if (!childStruct) return {};
-                    structure.Structs.map[key] = std::move(*childStruct);
-                    break;
-                };
+                });
+
+                switch (callback) {
+                    case coc::Struct::tokenizeValueCallback::Fail: return {};
+
+                    case coc::Struct::tokenizeValueCallback::Single: {
+                        std::optional<Struct> childStruct = coc::Load(values[0]);
+                        if (!childStruct) return {};
+                        structure.Structs.map[key] = std::move(*childStruct);
+                        goto breakS;
+                    }
+
+                    case coc::Struct::tokenizeValueCallback::Array: {
+                        for (std::string &value : values) {
+                            auto childStruct = coc::Load(value);
+                            if (!childStruct) return {};
+                            structure.StructArrays.map[key].emplace_back(std::move(*childStruct));
+                        }
+                        goto breakS;
+                    }
+                }
+
+                breakS:
+                index = i;
+                break;
             }
 
             case 'b': {
                 int i = index;
-                std::string key, value = "";
+                std::string key;
+                std::vector<std::string> values;
 
-                if (!structure.tokenize(data, i, "bool", key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
+                coc::Struct::tokenizeValueCallback callback = structure.tokenize(data, i, "bool", key, values, [](std::string_view data, int &index, bool isArray, std::string &key, std::string &value) {
                     bool b = false;
                     switch (data[index++]) {
                         default: return false;
@@ -103,22 +135,44 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                     for (char c : desiredValue) {
                         if (c != data[index++]) return false;
                     }
-                    if (data[index] != ' ') return false;
+
+                    if (data[index] != ' ') {
+                        if (!isArray) return false;
+                        if (data[index] != ',' && data[index] != ' ' && data[index] != ']') return false;
+                    }
+                    index--;
 
                     value = b ? "1" : "0";
                     return true;
-                })) return {};
+                });
 
+                switch (callback) {
+                    case coc::Struct::tokenizeValueCallback::Fail: return {};
+
+                    case coc::Struct::tokenizeValueCallback::Single: {
+                        structure.Bools.map[key] = (values[0] == "1") ? true : false;
+                        goto breakB;
+                    }
+
+                    case coc::Struct::tokenizeValueCallback::Array: {
+                        for (std::string &value : values) {
+                            structure.BoolArrays.map[key].emplace_back((value == "1") ? true : false);
+                        }
+                        goto breakB;
+                    }
+                }
+
+                breakB:
                 index = i;
-                structure.Bools.map[key] = (value == "1") ? true : false;
                 break;
             }
 
             case 'c': {
                 int i = index;
-                std::string key, value = "";
+                std::string key;
+                std::vector<std::string> values;
 
-                if (!structure.tokenize(data, i, "char", key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
+                coc::Struct::tokenizeValueCallback callback = structure.tokenize(data, i, "char", key, values, [](std::string_view data, int &index, bool isArray, std::string &key, std::string &value) {
                     bool begin = false;
 
                     do {
@@ -132,12 +186,28 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                     index++;
 
                     if (data[index+1] != '\'') return false;
-                    value += data[index];
+                    value += data[index++];
                     return true;
-                })) return {};
+                });
 
+                switch (callback) {
+                    case coc::Struct::tokenizeValueCallback::Fail: return {};
+
+                    case coc::Struct::tokenizeValueCallback::Single: {
+                        structure.Chars.map[key] = values[0][0];
+                        goto breakC;
+                    }
+
+                    case coc::Struct::tokenizeValueCallback::Array: {
+                        for (std::string &value : values) {
+                            structure.CharArrays.map[key].emplace_back(value[0]);
+                        }
+                        goto breakC;
+                    }
+                }
+
+                breakC:
                 index = i;
-                structure.Chars.map[key] = value[0];
                 break;
             }
 
@@ -147,9 +217,10 @@ std::optional<coc::Struct> coc::Load(std::string data) {
             }
             case 'l': {
                 int i = index;
-                std::string key, value = "";
+                std::string key;
+                std::vector<std::string> values;
 
-                if (!structure.tokenize(data, i, (firstCase ? "int" : "long"), key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
+                coc::Struct::tokenizeValueCallback callback = structure.tokenize(data, i, (firstCase ? "int" : "long"), key, values, [](std::string_view data, int &index, bool isArray, std::string &key, std::string &value) {
                     if (data[index] == '-') {
                         value += '-';
                         index++;
@@ -157,31 +228,63 @@ std::optional<coc::Struct> coc::Load(std::string data) {
 
                     do {
                         if (data[index] == ' ') break;
+                        if (isArray && (data[index] == ',' || data[index] == ']')) break;
 
                         if (std::isdigit(data[index])) {
                             value += data[index];
                         }
                         else return false;
                     } while (index++ < data.length());
+                    index--;
 
                     return !value.empty();
-                })) return {};
+                });
 
-                if (firstCase) {
-                    try {
-                        int i = std::stoi(value);
-                        structure.Ints.map[key] = i;
+                switch (callback) {
+                    case coc::Struct::tokenizeValueCallback::Fail: return {};
+
+                    case coc::Struct::tokenizeValueCallback::Single: {
+                        if (firstCase) {
+                            try {
+                                int i = std::stoi(values[0]);
+                                structure.Ints.map[key] = i;
+                            }
+                            catch (const std::out_of_range &e) { return {}; }
+                            goto breakI;
+                        }
+
+                        try {
+                            long long int l = std::stoll(values[0]);
+                            structure.Longs.map[key] = l;
+                        }
+                        catch (const std::out_of_range &e) { return {}; }
+                        goto breakI;
                     }
-                    catch (const std::out_of_range &e) { return {}; }
-                }
-                else {
-                    try {
-                        long long int l = std::stoll(value);
-                        structure.Longs.map[key] = l;
+
+                    case coc::Struct::tokenizeValueCallback::Array: {
+                        if (firstCase) {
+                            for (std::string &value : values) {
+                                try {
+                                    int i = std::stoi(value);
+                                    structure.IntArrays.map[key].emplace_back(i);
+                                }
+                                catch (const std::out_of_range &e) { return {}; }
+                            }
+                            goto breakI;
+                        }
+
+                        for (std::string &value : values) {
+                            try {
+                                long long int l = std::stoll(value);
+                                structure.LongArrays.map[key].emplace_back(l);
+                            }
+                            catch (const std::out_of_range &e) { return {}; }
+                        }
+                        goto breakI;
                     }
-                    catch (const std::out_of_range &e) { return {}; }
                 }
 
+                breakI:
                 index = i;
                 break;
             }
@@ -192,9 +295,10 @@ std::optional<coc::Struct> coc::Load(std::string data) {
             }
             case 'd': {
                 int i = index;
-                std::string key, value = "";
+                std::string key;
+                std::vector<std::string> values;
 
-                if (!structure.tokenize(data, i, (firstCase ? "float" : "double"), key, value, [](std::string_view data, int &index, std::string &key, std::string &value) {
+                coc::Struct::tokenizeValueCallback callback = structure.tokenize(data, i, (firstCase ? "float" : "double"), key, values, [](std::string_view data, int &index, bool isArray, std::string &key, std::string &value) {
                     if (data[index] == '-') {
                         value += '-';
                         index++;
@@ -203,6 +307,7 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                     bool hasDot = false;
                     do {
                         if (data[index] == ' ') break;
+                        if (isArray && (data[index] == ',' || data[index] == ']')) break;
 
                         if (std::isdigit(data[index])) {
                             value += data[index];
@@ -217,31 +322,68 @@ std::optional<coc::Struct> coc::Load(std::string data) {
 
                         return false;
                     } while (index++ < data.length());
+                    index--;
 
                     return !value.empty();
-                })) return {};
+                });
 
-                if (firstCase) {
-                    float f;
-                    try { f = std::stof(value); }
-                    catch (const std::out_of_range &e) { return {}; }
+                switch (callback) {
+                    case coc::Struct::tokenizeValueCallback::Fail: return {};
 
-                    if (f == std::numeric_limits<float>::infinity()
-                    ||  f == -std::numeric_limits<float>::infinity()
-                    ) return {};
-                    structure.Floats.map[key] = f;
+                    case coc::Struct::tokenizeValueCallback::Single: {
+                        if (firstCase) {
+                            float f;
+                            try { f = std::stof(values[0]); }
+                            catch (const std::out_of_range &e) { return {}; }
+
+                            if (f == std::numeric_limits<float>::infinity()
+                            ||  f == -std::numeric_limits<float>::infinity()
+                            ) return {};
+                            structure.Floats.map[key] = f;
+                            goto breakD;
+                        }
+
+                        double d;
+                        try { d = std::stod(values[0]); }
+                        catch (const std::out_of_range &e) { return {}; }
+
+                        if (d == std::numeric_limits<double>::infinity()
+                        ||  d == std::numeric_limits<double>::infinity()
+                        ) return {};
+                        structure.Doubles.map[key] = d;
+                        goto breakD;
+                    }
+
+                    case coc::Struct::tokenizeValueCallback::Array: {
+                        if (firstCase) {
+                            for (std::string &value : values) {
+                                float f;
+                                try { f = std::stof(value); }
+                                catch (const std::out_of_range &e) { return {}; }
+
+                                if (f == std::numeric_limits<float>::infinity()
+                                ||  f == -std::numeric_limits<float>::infinity()
+                                ) return {};
+                                structure.FloatArrays.map[key].emplace_back(f);
+                            }
+                            goto breakD;
+                        }
+
+                        for (std::string &value : values) {
+                            double d;
+                            try { d = std::stod(value); }
+                            catch (const std::out_of_range &e) { return {}; }
+
+                            if (d == std::numeric_limits<double>::infinity()
+                            ||  d == std::numeric_limits<double>::infinity()
+                            ) return {};
+                            structure.DoubleArrays.map[key].emplace_back(d);
+                        }
+                        goto breakD;
+                    }
                 }
-                else {
-                    double d;
-                    try { d = std::stod(value); }
-                    catch (const std::out_of_range &e) { return {}; }
 
-                    if (d == std::numeric_limits<double>::infinity()
-                    ||  d == std::numeric_limits<double>::infinity()
-                    ) return {};
-                    structure.Doubles.map[key] = d;
-                }
-
+                breakD:
                 index = i;
                 break;
             }

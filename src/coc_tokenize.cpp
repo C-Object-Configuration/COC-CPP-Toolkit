@@ -1,7 +1,8 @@
 #include "coc.hpp"
 
-bool coc::Struct::tokenize(std::string_view data, int &index, std::string stringedType, std::string &key, std::string &value, bool(*hasValue)(std::string_view data, int &index, std::string &key, std::string &value)) {
-    return tokenizeType(data, index, stringedType) && tokenizeKey(data, index, key) && tokenizeValue(data, index, key, value, hasValue);
+coc::Struct::tokenizeValueCallback coc::Struct::tokenize(std::string_view data, int &index, std::string stringedType, std::string &key, std::vector<std::string> &values, bool(*hasValue)(std::string_view data, int &index, bool isArray, std::string &key, std::string &value)) {
+    if (!tokenizeType(data, index, stringedType) || !tokenizeKey(data, index, key)) return Fail;
+    return tokenizeValue(data, index, key, values, hasValue);
 }
 
 bool coc::Struct::tokenizeType(std::string_view data, int &index, std::string &type) {
@@ -41,7 +42,7 @@ bool coc::Struct::tokenizeKey(std::string_view data, int &index, std::string &ke
     return false;
 }
 
-bool coc::Struct::tokenizeValue(std::string_view data, int &index, std::string &key, std::string &value, bool(*hasValue)(std::string_view data, int &index, std::string &key, std::string &value)) {
+coc::Struct::tokenizeValueCallback coc::Struct::tokenizeValue(std::string_view data, int &index, std::string &key, std::vector<std::string> &values, bool(*hasValue)(std::string_view data, int &index, bool isArray, std::string &key, std::string &value)) {
     bool hasEqual = false;
 
     while (index++ < data.length()) {
@@ -49,18 +50,59 @@ bool coc::Struct::tokenizeValue(std::string_view data, int &index, std::string &
             case ' ': continue;
 
             case '=': {
-                if (hasEqual) return false;
+                if (hasEqual) return Fail;
                 hasEqual = true;
-                break;
+                continue;
+            }
+
+            case '[': {
+                if (!hasEqual) return Fail;
+                goto parseArray;
             }
 
             default: {
-                if (!hasEqual) return false;
-                goto breakWhile;
+                if (!hasEqual) return Fail;
+                goto parseSingle;
             }
         }
     }
-    breakWhile:
 
-    return hasValue(data, index, key, value);
+    parseSingle:
+    values.emplace_back("");
+    return hasValue(data, index, false, key, values[0])
+        ? Single
+        : Fail
+    ;
+
+    parseArray:
+    bool hasComma = true;
+    while (index++ < data.length()) {
+        switch (data[index]) {
+            case ' ': continue;
+
+            case ',': {
+                if (hasComma) return Fail;
+                hasComma = true;
+                continue;
+            }
+
+            case ']': {
+                return hasComma
+                    ? Fail
+                    : Array
+                ;
+            }
+
+            default: {
+                if (!hasComma) return Fail;
+                hasComma = false;
+                values.emplace_back("");
+                if (!hasValue(data, index, true, key, values[values.size()-1])) {
+                    return Fail;
+                }
+                continue;
+            }
+        }
+    }
+    return Fail;
 }
