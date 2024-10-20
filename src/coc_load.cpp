@@ -63,27 +63,33 @@ std::optional<coc::Struct> coc::Load(std::string data) {
                 values = {};
 
                 callback = structure.tokenize(data, i, "struct", key, values, [](std::string_view data, int &index, bool isArray, std::string &key, std::string &value) {
-                    bool begin = false;
+                    int openings, closings = 0;
 
                     do {
                         switch (data[index]) {
                             case '{': {
-                                begin = true;
+                                openings++;
+                                if (openings > 0) value += '{';
                                 continue;
                             }
 
                             case ' ': {
-                                if (!begin) continue;
-                                [[fallthrough]];
+                                if (openings > 0) value += ' ';
+                                continue;
                             }
 
                             default: {
-                                if (!begin) return false;
+                                if (openings == 0) return false;
                                 value += data[index];
                                 continue;
                             }
 
-                            case '}': return begin;
+                            case '}': {
+                                closings++;
+                                if (openings == closings) return true;
+                                value += '}';
+                                continue;
+                            }
                         }
                     } while (index++ < data.length());
 

@@ -44,69 +44,27 @@ void Bools(coc::Struct &object) {
     }
 }
 
-void Ints(coc::Struct &object) {
-    std::cout << "\n\n-Ints-";
-
-    auto min = object.Ints["Min"];
-    auto max = object.Ints["Max"];
-    auto array = object.IntArrays["Array"];
-
-    if (min) std::cout << "\nMin: " << *min;
-    if (max) std::cout << "\nMax: " << *max;
-    if (array) {
-        for (int i = 0; i < (*array).size(); i++) {
-            std::cout << "\nArray[" << i << "]: " << (*array)[i];
-        }
-    }
+#define PRINT_NUMBER(type, arrayType)                               \
+void type(coc::Struct &object, std::string_view typeName) {         \
+    std::cout << "\n\n-" << typeName << '-';                        \
+                                                                    \
+    auto min = object.type["Min"];                                  \
+    auto max = object.type["Max"];                                  \
+    auto array = object.arrayType["Array"];                         \
+                                                                    \
+    if (min) std::cout << "\nMin: " << *min;                        \
+    if (max) std::cout << "\nMax: " << *max;                        \
+    if (array) {                                                    \
+        for (int i = 0; i < (*array).size(); i++) {                 \
+            std::cout << "\nArray[" << i << "]: " << (*array)[i];   \
+        }                                                           \
+    }                                                               \
 }
 
-void Longs(coc::Struct &object) {
-    std::cout << "\n\n-Longs-";
-
-    auto min = object.Longs["Min"];
-    auto max = object.Longs["Max"];
-    auto array = object.LongArrays["Array"];
-
-    if (min) std::cout << "\nMin: " << *min;
-    if (max) std::cout << "\nMax: " << *max;
-    if (array) {
-        for (int i = 0; i < (*array).size(); i++) {
-            std::cout << "\nArray[" << i << "]: " << (*array)[i];
-        }
-    }
-}
-
-void Floats(coc::Struct &object) {
-    std::cout << "\n\n-Floats-";
-
-    auto min = object.Floats["Min"];
-    auto max = object.Floats["Max"];
-    auto array = object.FloatArrays["Array"];
-
-    if (min) std::cout << "\nMin: " << *min;
-    if (max) std::cout << "\nMax: " << *max;
-    if (array) {
-        for (int i = 0; i < (*array).size(); i++) {
-            std::cout << "\nArray[" << i << "]: " << (*array)[i];
-        }
-    }
-}
-
-void Doubles(coc::Struct &object) {
-    std::cout << "\n\n-Doubles-";
-
-    auto min = object.Doubles["Min"];
-    auto max = object.Doubles["Max"];
-    auto array = object.DoubleArrays["Array"];
-
-    if (min) std::cout << "\nMin: " << *min;
-    if (max) std::cout << "\nMax: " << *max;
-    if (array) {
-        for (int i = 0; i < (*array).size(); i++) {
-            std::cout << "\nArray[" << i << "]: " << (*array)[i];
-        }
-    }
-}
+PRINT_NUMBER(Ints, IntArrays)
+PRINT_NUMBER(Longs, LongArrays)
+PRINT_NUMBER(Floats, FloatArrays)
+PRINT_NUMBER(Doubles, DoubleArrays)
 
 int main() {
     auto data = coc::Open("main.coc");
@@ -115,8 +73,7 @@ int main() {
         std::cin.get();
         return 0;
     }
-#define Debug
-#ifdef Debug
+
     Globals(*data);
 
     auto chars = data->Structs["Chars"];
@@ -125,18 +82,20 @@ int main() {
     auto bools = data->Structs["Bools"];
     if (bools) Bools(*bools);
 
-    auto ints = data->Structs["Ints"];
-    if (ints) Ints(*ints);
+    auto numbers = data->Structs["Numbers"];
+    if (numbers) {
+        auto ints = numbers->Structs["Ints"];
+        if (ints) Ints(*ints, "Ints");
 
-    auto longs = data->Structs["Longs"];
-    if (longs) Longs(*longs);
+        auto longs = numbers->Structs["Longs"];
+        if (longs) Longs(*longs, "Longs");
 
-    auto floats = data->Structs["Floats"];
-    if (floats) Floats(*floats);
+        auto floats = numbers->Structs["Floats"];
+        if (floats) Floats(*floats, "Floats");
 
-    auto doubles = data->Structs["Doubles"];
-    if (doubles) Doubles(*doubles);
-#endif
+        auto doubles = numbers->Structs["Doubles"];
+        if (doubles) Doubles(*doubles, "Doubles");
+    }
 
     std::cout << "\n\nEnter to continue";
     std::cin.get();
